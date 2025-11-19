@@ -32,8 +32,8 @@ export const generateICS = (medications) => {
     medications.forEach((med) => {
         const { id, name, dosage, time, frequency, specificDates } = med;
         const [hours, minutes] = time.split(':').map(Number);
-        const summary = dosage ? `💊 Take ${name} (${dosage})` : `💊 Take ${name}`;
-        const description = dosage ? `Time to take your ${name} ${dosage}` : `Time to take your ${name}`;
+        const summary = dosage ? `💊 ${name} (${dosage})` : `💊 ${name}`;
+        const description = dosage ? `Take ${name} ${dosage}` : `Take ${name}`;
 
         // Common properties
         const commonProps = [
@@ -45,50 +45,59 @@ export const generateICS = (medications) => {
             'TRANSP:TRANSPARENT'
         ];
 
-        // Alarm for reminders
+        // Alarm for instant notification (at event time)
         const alarmBlock = [
             'BEGIN:VALARM',
-            'TRIGGER:-PT0M',
+            'TRIGGER:-PT0M', // 0 minutes before = at event time
             'ACTION:DISPLAY',
-            `DESCRIPTION:${description}`,
+            `DESCRIPTION:${summary}`,
             'END:VALARM'
         ];
 
         if (frequency === 'daily') {
             const startDate = new Date();
             startDate.setHours(hours, minutes, 0, 0);
+
+            // End time: 5 minutes after start
+            const endDate = new Date(startDate);
+            endDate.setMinutes(endDate.getMinutes() + 5);
+
             const dtStart = formatDateToICS(startDate);
+            const dtEnd = formatDateToICS(endDate);
 
             icsContent.push('BEGIN:VEVENT');
             icsContent.push(...commonProps);
             icsContent.push(`DTSTART:${dtStart}`);
+            icsContent.push(`DTEND:${dtEnd}`);
             icsContent.push('RRULE:FREQ=DAILY');
             icsContent.push(...alarmBlock);
             icsContent.push('END:VEVENT');
 
         } else if (frequency === 'specific_dates' && specificDates && specificDates.length > 0) {
-            // Sort dates
-            const sortedDates = [...specificDates].sort((a, b) => new Date(a) - new Date(b));
-
-            // Create a base date for the first event
-            const firstDateObj = new Date(sortedDates[0]);
-            firstDateObj.setHours(hours, minutes, 0, 0);
-            const dtStart = formatDateToICS(firstDateObj);
-
-            // Format all dates for RDATE
-            const rdateStrings = sortedDates.map(d => {
-                const dateObj = new Date(d);
+            // For specific dates, create individual events
+            specificDates.forEach((dateStr, index) => {
+                const dateObj = new Date(dateStr);
                 dateObj.setHours(hours, minutes, 0, 0);
-                return formatDateToICS(dateObj);
-            });
-            const rdateValue = rdateStrings.join(',');
 
-            icsContent.push('BEGIN:VEVENT');
-            icsContent.push(...commonProps);
-            icsContent.push(`DTSTART:${dtStart}`);
-            icsContent.push(`RDATE;VALUE=DATE-TIME:${rdateValue}`);
-            icsContent.push(...alarmBlock);
-            icsContent.push('END:VEVENT');
+                // End time: 5 minutes after start
+                const endDateObj = new Date(dateObj);
+                endDateObj.setMinutes(endDateObj.getMinutes() + 5);
+
+                const dtStart = formatDateToICS(dateObj);
+                const dtEnd = formatDateToICS(endDateObj);
+
+                icsContent.push('BEGIN:VEVENT');
+                icsContent.push(`UID:${id}-${index}@digitalpillbox`);
+                icsContent.push(`DTSTAMP:${timestamp}`);
+                icsContent.push(`SUMMARY:${summary}`);
+                icsContent.push(`DESCRIPTION:${description}`);
+                icsContent.push('STATUS:CONFIRMED');
+                icsContent.push('TRANSP:TRANSPARENT');
+                icsContent.push(`DTSTART:${dtStart}`);
+                icsContent.push(`DTEND:${dtEnd}`);
+                icsContent.push(...alarmBlock);
+                icsContent.push('END:VEVENT');
+            });
         }
     });
 
@@ -97,134 +106,117 @@ export const generateICS = (medications) => {
     return icsContent.join('\r\n');
 };
 
+
 /**
- * Detects if the user is on a mobile device
+ * Detects user's platform
  */
-const isMobileDevice = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const detectPlatform = () => {
+    const ua = navigator.userAgent;
+
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        return 'ios';
+    }
+    if (/Android/.test(ua)) {
+        return 'android';
+    }
+    return 'web';
 };
 
 /**
- * Detects iOS devices specifically
+ * Formats date for calendar URLs (YYYYMMDDTHHMMSS)
  */
-const isIOS = () => {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const formatDateForCalendar = (date) => {
+    const pad = (n) => (n < 10 ? '0' + n : n);
+    return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
 };
 
+/**
+ * Creates calendar URL based on platform
+ */
+const createCalendarUrl = (medication, platform) => {
+    const { name, dosage, time, frequency } = medication;
+    const [hours, minutes] = time.split(':').map(Number);
+
+    const title = dosage ? `💊 ${name} (${dosage})` : `💊 ${name}`;
+    const description = dosage ? `Take ${name} ${dosage}` : `Take ${name}`;
+
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setMinutes(endDate.getMinutes() + 5);
+
+    const startStr = formatDateForCalendar(startDate);
+    const endStr = formatDateForCalendar(endDate);
+
+    if (platform === 'ios') {
+        // iOS Calendar URL scheme (works in Safari on iOS)
+        // Note: This opens in the default calendar app
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: title,
+            details: description,
+            dates: `${startStr}/${endStr}`,
+        });
+
+        const recur = frequency === 'daily' ? '&recur=RRULE:FREQ=DAILY' : '';
+        return `https://calendar.google.com/calendar/render?${params.toString()}${recur}`;
+    }
+
+    if (platform === 'android') {
+        // Android Calendar Intent (opens in default calendar)
+        const startMs = startDate.getTime();
+        const endMs = endDate.getTime();
+
+        // Google Calendar URL works universally on Android
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: title,
+            details: description,
+            dates: `${startStr}/${endStr}`,
+        });
+
+        const recur = frequency === 'daily' ? '&recur=RRULE:FREQ=DAILY' : '';
+        return `https://calendar.google.com/calendar/render?${params.toString()}${recur}`;
+    }
+
+    // Web (desktop) - Google Calendar
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: title,
+        details: description,
+        dates: `${startStr}/${endStr}`,
+    });
+
+    const recur = frequency === 'daily' ? '&recur=RRULE:FREQ=DAILY' : '';
+    return `https://calendar.google.com/calendar/render?${params.toString()}${recur}`;
+};
+
+/**
+ * Main export function - opens calendar for medications
+ */
 export const downloadICS = (content, filename = 'pillbox_schedule.ics') => {
-    const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+    // This is kept for backward compatibility but not used anymore
+    console.warn('downloadICS with content is deprecated, use addToCalendar instead');
+};
 
-    // For mobile devices, use data URI approach which often opens calendar directly
-    if (isMobileDevice()) {
-        // Encode the ICS content
-        const encodedContent = encodeURIComponent(content);
-        const dataUri = `data:text/calendar;charset=utf-8,${encodedContent}`;
-
-        // Create a temporary link
-        const link = document.createElement('a');
-        link.href = dataUri;
-        link.download = filename;
-        link.style.display = 'none';
-
-        // For iOS, we need to handle it differently
-        if (isIOS()) {
-            // iOS Safari doesn't support data URI downloads well
-            // Try to open in new window which might trigger calendar
-            const newWindow = window.open('', '_blank');
-            if (newWindow) {
-                newWindow.document.write(`
-                    <html>
-                    <head>
-                        <meta charset="utf-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1">
-                        <title>Add to Calendar</title>
-                        <style>
-                            body {
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                                padding: 20px;
-                                text-align: center;
-                                background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-                                min-height: 100vh;
-                                display: flex;
-                                flex-direction: column;
-                                align-items: center;
-                                justify-content: center;
-                            }
-                            .container {
-                                background: white;
-                                padding: 30px;
-                                border-radius: 20px;
-                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                                max-width: 400px;
-                            }
-                            h1 { color: #4f46e5; margin-bottom: 20px; }
-                            p { color: #64748b; margin-bottom: 20px; line-height: 1.6; }
-                            .btn {
-                                display: inline-block;
-                                background: #4f46e5;
-                                color: white;
-                                padding: 12px 24px;
-                                border-radius: 12px;
-                                text-decoration: none;
-                                font-weight: 600;
-                                margin: 10px 0;
-                            }
-                            .instructions {
-                                margin-top: 20px;
-                                padding: 15px;
-                                background: #f1f5f9;
-                                border-radius: 10px;
-                                font-size: 14px;
-                                color: #475569;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <h1>📅 Add to Calendar</h1>
-                            <p>Tap the button below to download your medication schedule:</p>
-                            <a href="${dataUri}" download="${filename}" class="btn">Download Schedule</a>
-                            <div class="instructions">
-                                <strong>Next steps:</strong><br>
-                                1. Tap "Download"<br>
-                                2. Open the downloaded file<br>
-                                3. Choose your calendar app<br>
-                                4. Confirm to add events
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                `);
-                newWindow.document.close();
-            } else {
-                // Fallback if popup blocked
-                fallbackDownload(blob, filename);
-            }
-        } else {
-            // For Android and other mobile devices
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
+/**
+ * Adds medications to calendar using platform-specific URLs
+ */
+export const addToCalendar = (medications) => {
+    if (!medications || medications.length === 0) {
         return;
     }
 
-    // For desktop, use standard blob download
-    fallbackDownload(blob, filename);
-};
+    const platform = detectPlatform();
 
-/**
- * Fallback download method using blob
- */
-const fallbackDownload = (blob, filename) => {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', filename);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    // Open calendar URLs for each medication
+    medications.forEach((med, index) => {
+        const url = createCalendarUrl(med, platform);
+
+        // Small delay to avoid popup blocking
+        setTimeout(() => {
+            window.open(url, '_blank');
+        }, index * 300);
+    });
 };

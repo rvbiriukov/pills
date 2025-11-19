@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import MedicationForm from './components/MedicationForm';
 import MedicationList from './components/MedicationList';
-import { generateICS, downloadICS } from './utils/icsUtils';
+import { addToCalendar } from './utils/icsUtils';
 import { CalendarCheck, Download, Sparkles, Globe } from 'lucide-react';
 import './i18n'; // Initialize i18n
 import './index.css';
@@ -72,8 +72,8 @@ function App() {
       alert(t('export_alert'));
       return;
     }
-    const icsContent = generateICS(medications);
-    downloadICS(icsContent, 'pillbox_schedule.ics');
+
+    addToCalendar(medications);
   };
 
   return (
