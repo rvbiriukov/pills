@@ -28,7 +28,8 @@ const resources = {
             "add_first_medication": "Add your first medication to get started.",
             "delete_label": "Delete medication",
             "export_alert": "Please add at least one medication to export.",
-            "error_required_name": "Please enter the medication name."
+            "error_required_name": "Please enter the medication name.",
+            "footer_made_with": "Vibe-coded with ❤️ for those over 30 by"
         }
     },
     de: {
@@ -56,7 +57,8 @@ const resources = {
             "add_first_medication": "Fügen Sie Ihr erstes Medikament hinzu, um zu beginnen.",
             "delete_label": "Medikament löschen",
             "export_alert": "Bitte fügen Sie mindestens ein Medikament hinzu, um zu exportieren.",
-            "error_required_name": "Bitte geben Sie den Medikamentennamen ein."
+            "error_required_name": "Bitte geben Sie den Medikamentennamen ein.",
+            "footer_made_with": "Vibe-coded mit ❤️ für alle über 30 von"
         }
     },
     es: {
@@ -84,7 +86,8 @@ const resources = {
             "add_first_medication": "Añade tu primer medicamento para empezar.",
             "delete_label": "Eliminar medicamento",
             "export_alert": "Por favor añade al menos un medicamento para exportar.",
-            "error_required_name": "Por favor introduce el nombre del medicamento."
+            "error_required_name": "Por favor introduce el nombre del medicamento.",
+            "footer_made_with": "Vibe-coded con ❤️ para mayores de 30 por"
         }
     },
     pt: {
@@ -112,7 +115,8 @@ const resources = {
             "add_first_medication": "Adicione seu primeiro medicamento para começar.",
             "delete_label": "Excluir medicamento",
             "export_alert": "Por favor adicione pelo menos um medicamento para exportar.",
-            "error_required_name": "Por favor insira o nome do medicamento."
+            "error_required_name": "Por favor insira o nome do medicamento.",
+            "footer_made_with": "Vibe-coded com ❤️ para quem tem mais de 30 por"
         }
     },
     ru: {
@@ -140,7 +144,8 @@ const resources = {
             "add_first_medication": "Добавьте первое лекарство, чтобы начать.",
             "delete_label": "Удалить лекарство",
             "export_alert": "Пожалуйста, добавьте хотя бы одно лекарство для экспорта.",
-            "error_required_name": "Пожалуйста, введите название лекарства."
+            "error_required_name": "Пожалуйста, введите название лекарства.",
+            "footer_made_with": "Вайб-кодил с ❤️ для тех, кому за 30 —"
         }
     }
 };

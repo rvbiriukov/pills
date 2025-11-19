@@ -6,107 +6,21 @@ import { Calendar as CalendarIcon, Clock, Pill, Check, AlertCircle, Plus, Chevro
 import 'react-day-picker/dist/style.css';
 import clsx from 'clsx';
 
-function TimePicker({ value, onChange }) {
-    const [hours, minutes] = value.split(':');
-
-    const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-    const MINUTES = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
-
-    const handleHourChange = (h) => {
-        onChange(`${h}:${minutes}`);
-    };
-
-    const handleMinuteChange = (m) => {
-        onChange(`${hours}:${m}`);
-    };
-
-    return (
-        <div className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-xl animate-in fade-in zoom-in-95 duration-200 w-full max-w-sm">
-            {/* Hours Column */}
-            <div className="flex-1">
-                <div className="text-xs font-bold text-slate-400 mb-2 text-center uppercase tracking-wider">Hours</div>
-                <div className="grid grid-cols-4 gap-1 h-48 overflow-y-auto pr-1 custom-scrollbar">
-                    {HOURS.map((h) => (
-                        <button
-                            key={h}
-                            type="button"
-                            onClick={() => handleHourChange(h)}
-                            className={clsx(
-                                "py-2 rounded-lg text-sm font-medium transition-all hover:scale-105",
-                                hours === h
-                                    ? "bg-indigo-500 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100"
-                            )}
-                        >
-                            {h}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Separator */}
-            <div className="w-px bg-slate-100 my-2"></div>
-
-            {/* Minutes Column */}
-            <div className="flex-1">
-                <div className="text-xs font-bold text-slate-400 mb-2 text-center uppercase tracking-wider">Minutes</div>
-                <div className="grid grid-cols-3 gap-1 h-48 overflow-y-auto pl-1 custom-scrollbar">
-                    {MINUTES.map((m) => (
-                        <button
-                            key={m}
-                            type="button"
-                            onClick={() => handleMinuteChange(m)}
-                            className={clsx(
-                                "py-2 rounded-lg text-sm font-medium transition-all hover:scale-105",
-                                minutes === m
-                                    ? "bg-indigo-500 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100"
-                            )}
-                        >
-                            {m}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-}
-
 function MedicationForm({ onAdd }) {
     const { t } = useTranslation();
     const [name, setName] = useState('');
     const [dosage, setDosage] = useState('');
     const [time, setTime] = useState('09:00');
     const [isCustomTime, setIsCustomTime] = useState(false);
-    const [showTimePicker, setShowTimePicker] = useState(false);
     const [frequency, setFrequency] = useState('daily');
     const [selectedDays, setSelectedDays] = useState([]);
     const [errors, setErrors] = useState({});
-    const timePickerRef = useRef(null);
-    const customTimeButtonRef = useRef(null);
 
     const TIME_PRESETS = [
         { label: t('morning'), value: '09:00', icon: Sunrise },
         { label: t('afternoon'), value: '14:00', icon: Sun },
         { label: t('evening'), value: '21:00', icon: Moon },
     ];
-
-    // Close custom time picker when clicking outside
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (
-                timePickerRef.current &&
-                !timePickerRef.current.contains(event.target) &&
-                !customTimeButtonRef.current?.contains(event.target)
-            ) {
-                setShowTimePicker(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
 
     const validate = () => {
         const newErrors = {};
@@ -148,7 +62,6 @@ function MedicationForm({ onAdd }) {
         setDosage('');
         setTime('09:00');
         setIsCustomTime(false);
-        setShowTimePicker(false);
         setFrequency('daily');
         setSelectedDays([]);
         setErrors({});
@@ -211,7 +124,6 @@ function MedicationForm({ onAdd }) {
                             onClick={() => {
                                 setTime(preset.value);
                                 setIsCustomTime(false);
-                                setShowTimePicker(false);
                             }}
                             className={clsx(
                                 "flex flex-col items-center justify-center p-3.5 rounded-2xl border transition-all duration-200 relative overflow-hidden group",
@@ -227,11 +139,7 @@ function MedicationForm({ onAdd }) {
                     ))}
                     <button
                         type="button"
-                        ref={customTimeButtonRef}
-                        onClick={() => {
-                            setIsCustomTime(true);
-                            setShowTimePicker(!showTimePicker);
-                        }}
+                        onClick={() => setIsCustomTime(true)}
                         className={clsx(
                             "flex flex-col items-center justify-center p-3.5 rounded-2xl border transition-all duration-200 group relative",
                             isCustomTime
@@ -250,22 +158,13 @@ function MedicationForm({ onAdd }) {
                 </div>
 
                 {isCustomTime && (
-                    <div className="mt-4 relative">
-                        <div
-                            onClick={() => setShowTimePicker(!showTimePicker)}
-                            className="input-field flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors group"
-                        >
-                            <span className="font-mono text-2xl tracking-widest font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">
-                                {time}
-                            </span>
-                            <ChevronDown className={clsx("w-5 h-5 text-slate-400 transition-transform duration-200", showTimePicker && "rotate-180")} />
-                        </div>
-
-                        {showTimePicker && (
-                            <div className="absolute top-full left-0 right-0 mt-2 z-20 flex justify-center" ref={timePickerRef}>
-                                <TimePicker value={time} onChange={setTime} />
-                            </div>
-                        )}
+                    <div className="mt-4">
+                        <input
+                            type="time"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                            className="input-field text-center font-mono text-lg"
+                        />
                     </div>
                 )}
             </div>

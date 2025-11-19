@@ -97,13 +97,73 @@ export const generateICS = (medications) => {
     return icsContent.join('\r\n');
 };
 
+/**
+ * Detects if the user is on a mobile device
+ */
+const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+/**
+ * Detects if the user is in an in-app browser (like Telegram, WhatsApp, etc.)
+ */
+const isInAppBrowser = () => {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    return (ua.indexOf('FBAN') > -1) ||
+        (ua.indexOf('FBAV') > -1) ||
+        (ua.indexOf('Instagram') > -1) ||
+        (ua.indexOf('Telegram') > -1) ||
+        (ua.indexOf('WhatsApp') > -1);
+};
+
 export const downloadICS = (content, filename = 'pillbox_schedule.ics') => {
-    // Standard, reliable download method
     const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+
+    // Strategy 1: Try to use native share API on mobile (best for in-app browsers)
+    if (isMobileDevice() && navigator.share) {
+        const file = new File([blob], filename, { type: 'text/calendar' });
+
+        navigator.share({
+            files: [file],
+            title: 'Medication Schedule',
+            text: 'Import your medication schedule to calendar'
+        }).catch((error) => {
+            console.log('Share failed, falling back to download:', error);
+            fallbackDownload(blob, filename);
+        });
+        return;
+    }
+
+    // Strategy 2: For mobile devices, try to open directly
+    if (isMobileDevice()) {
+        const url = window.URL.createObjectURL(blob);
+
+        // Try to open in a new window (works better on iOS)
+        const newWindow = window.open(url, '_blank');
+
+        if (!newWindow) {
+            // If popup blocked, fall back to download
+            fallbackDownload(blob, filename);
+        }
+
+        // Clean up after a delay
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+        return;
+    }
+
+    // Strategy 3: Standard download for desktop
+    fallbackDownload(blob, filename);
+};
+
+/**
+ * Fallback download method
+ */
+const fallbackDownload = (blob, filename) => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', filename);
+    link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
