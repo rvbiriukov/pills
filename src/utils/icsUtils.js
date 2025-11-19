@@ -105,58 +105,117 @@ const isMobileDevice = () => {
 };
 
 /**
- * Detects if the user is in an in-app browser (like Telegram, WhatsApp, etc.)
+ * Detects iOS devices specifically
  */
-const isInAppBrowser = () => {
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
-    return (ua.indexOf('FBAN') > -1) ||
-        (ua.indexOf('FBAV') > -1) ||
-        (ua.indexOf('Instagram') > -1) ||
-        (ua.indexOf('Telegram') > -1) ||
-        (ua.indexOf('WhatsApp') > -1);
+const isIOS = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 };
 
 export const downloadICS = (content, filename = 'pillbox_schedule.ics') => {
     const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
 
-    // Strategy 1: Try to use native share API on mobile (best for in-app browsers)
-    if (isMobileDevice() && navigator.share) {
-        const file = new File([blob], filename, { type: 'text/calendar' });
-
-        navigator.share({
-            files: [file],
-            title: 'Medication Schedule',
-            text: 'Import your medication schedule to calendar'
-        }).catch((error) => {
-            console.log('Share failed, falling back to download:', error);
-            fallbackDownload(blob, filename);
-        });
-        return;
-    }
-
-    // Strategy 2: For mobile devices, try to open directly
+    // For mobile devices, use data URI approach which often opens calendar directly
     if (isMobileDevice()) {
-        const url = window.URL.createObjectURL(blob);
+        // Encode the ICS content
+        const encodedContent = encodeURIComponent(content);
+        const dataUri = `data:text/calendar;charset=utf-8,${encodedContent}`;
 
-        // Try to open in a new window (works better on iOS)
-        const newWindow = window.open(url, '_blank');
+        // Create a temporary link
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = filename;
+        link.style.display = 'none';
 
-        if (!newWindow) {
-            // If popup blocked, fall back to download
-            fallbackDownload(blob, filename);
+        // For iOS, we need to handle it differently
+        if (isIOS()) {
+            // iOS Safari doesn't support data URI downloads well
+            // Try to open in new window which might trigger calendar
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.write(`
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <title>Add to Calendar</title>
+                        <style>
+                            body {
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                                padding: 20px;
+                                text-align: center;
+                                background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+                                min-height: 100vh;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            .container {
+                                background: white;
+                                padding: 30px;
+                                border-radius: 20px;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                                max-width: 400px;
+                            }
+                            h1 { color: #4f46e5; margin-bottom: 20px; }
+                            p { color: #64748b; margin-bottom: 20px; line-height: 1.6; }
+                            .btn {
+                                display: inline-block;
+                                background: #4f46e5;
+                                color: white;
+                                padding: 12px 24px;
+                                border-radius: 12px;
+                                text-decoration: none;
+                                font-weight: 600;
+                                margin: 10px 0;
+                            }
+                            .instructions {
+                                margin-top: 20px;
+                                padding: 15px;
+                                background: #f1f5f9;
+                                border-radius: 10px;
+                                font-size: 14px;
+                                color: #475569;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h1>📅 Add to Calendar</h1>
+                            <p>Tap the button below to download your medication schedule:</p>
+                            <a href="${dataUri}" download="${filename}" class="btn">Download Schedule</a>
+                            <div class="instructions">
+                                <strong>Next steps:</strong><br>
+                                1. Tap "Download"<br>
+                                2. Open the downloaded file<br>
+                                3. Choose your calendar app<br>
+                                4. Confirm to add events
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                newWindow.document.close();
+            } else {
+                // Fallback if popup blocked
+                fallbackDownload(blob, filename);
+            }
+        } else {
+            // For Android and other mobile devices
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        // Clean up after a delay
-        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
         return;
     }
 
-    // Strategy 3: Standard download for desktop
+    // For desktop, use standard blob download
     fallbackDownload(blob, filename);
 };
 
 /**
- * Fallback download method
+ * Fallback download method using blob
  */
 const fallbackDownload = (blob, filename) => {
     const url = window.URL.createObjectURL(blob);
