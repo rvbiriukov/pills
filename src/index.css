@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+@theme {
+  --color-primary: #6366f1;
+  /* Indigo 500 */
+  --color-primary-hover: #4f46e5;
+  /* Indigo 600 */
+  --color-secondary: #64748b;
+  /* Slate 500 */
+  --color-background: #f8fafc;
+  /* Slate 50 */
+  --color-surface: #ffffff;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Outfit', sans-serif;
+}
+
+@layer components {
+  .app-container {
+    @apply w-full max-w-2xl bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 flex flex-col gap-8 relative overflow-hidden;
+  }
+
+  @media (min-width: 640px) {
+    .app-container {
+      padding: 2.5rem;
+    }
+  }
+
+  .glass-panel {
+    @apply bg-white/60 backdrop-blur-md border border-white/50 shadow-sm;
+  }
+
+  .btn-primary {
+    @apply bg-indigo-500 text-white px-6 py-3.5 rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2;
+
+    &:hover {
+      @apply bg-indigo-600 -translate-y-0.5 shadow-indigo-500/40;
+    }
+
+    &:active {
+      @apply translate-y-0 shadow-indigo-500/20;
+    }
+
+    &:disabled {
+      @apply opacity-50 cursor-not-allowed shadow-none translate-y-0;
+    }
+  }
+
+  .btn-secondary {
+    @apply bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-xl font-medium transition-all shadow-sm;
+
+    &:hover {
+      @apply bg-slate-50 border-slate-300 text-slate-900;
+    }
+  }
+
+  .input-field {
+    @apply w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl transition-all text-slate-900 placeholder:text-slate-400;
+
+    &:focus {
+      @apply outline-none bg-white ring-2 ring-indigo-500/20 border-indigo-500 shadow-sm;
+    }
+  }
+
+  .label-text {
+    @apply block text-sm font-semibold text-slate-700 mb-2 ml-1;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 border border-transparent hover:border-indigo-100;
+  }
+}
+
+/* Base styles */
+body {
+  @apply bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex justify-center p-4;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+}
+
+@media (min-width: 640px) {
+  body {
+    padding: 3rem 2rem;
+  }
+}
+
+/* DayPicker Customization */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #6366f1;
+  --rdp-background-color: #e0e7ff;
+  margin: 0 !important;
+}
+
+.rdp-day_selected:not([disabled]) {
+  background-color: var(--rdp-accent-color);
+  font-weight: 600;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: #f1f5f9;
+  color: #4f46e5;
+}
