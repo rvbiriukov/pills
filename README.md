@@ -1,16 +1,65 @@
-# React + Vite
+# Digital Pillbox 💊
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, localized medication schedule app built with React, Tailwind CSS, and Vite.
 
-Currently, two official plugins are available:
+## Features
+- **Beautiful UI**: Glassmorphism, soft shadows, and smooth animations.
+- **Localization**: Supports EN, DE, ES, PT, RU.
+- **Persistence**: Automatically saves your schedule to your device.
+- **Export**: Generates `.ics` calendar files for Google/Apple Calendar.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 How to Deploy to GitHub Pages
 
-## React Compiler
+I have already set up the project for you. Follow these steps to put it online:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Create a Repository on GitHub
+1. Go to [github.com/new](https://github.com/new).
+2. Name your repository (e.g., `pills`).
+3. Make it **Public**.
+4. **Do not** initialize with README, .gitignore, or License (we already have them).
+5. Click **Create repository**.
 
-## Expanding the ESLint configuration
+### 2. Push Your Code
+Run these commands in your terminal (replace `<YOUR_USERNAME>` and `<REPO_NAME>`):
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Link your local files to the new GitHub repo
+git remote add origin https://github.com/<YOUR_USERNAME>/<REPO_NAME>.git
+
+# Rename branch to main (standard practice)
+git branch -M main
+
+# Push your code
+git push -u origin main
+```
+
+### 3. Configure GitHub Pages
+1. Go to your repository **Settings** > **Pages**.
+2. Under **Build and deployment**, select **GitHub Actions** as the source.
+3. The deployment will start automatically! Wait a minute or two.
+4. Refresh the page to see your live URL.
+
+### ⚠️ Important: Fixing the "Blank Page" Issue
+If your live site shows a blank white page, you need to update the `base` path:
+
+1. Open `vite.config.js` in this folder.
+2. Uncomment and update the `base` line to match your repository name:
+   ```javascript
+   export default defineConfig({
+     plugins: [react()],
+     base: '/pills/', // <--- If your repo is named 'pills'
+   })
+   ```
+3. Commit and push the change:
+   ```bash
+   git add vite.config.js
+   git commit -m "Update base path for GitHub Pages"
+   git push
+   ```
+
+## Development
+To run locally:
+```bash
+npm install
+npm run dev
+```
