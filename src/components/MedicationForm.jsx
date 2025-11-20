@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Calendar as CalendarIcon, Clock, Pill, Check, AlertCircle, Plus, ChevronDown, Sunrise, Sun, Moon } from 'lucide-react';
 import 'react-day-picker/dist/style.css';
 import clsx from 'clsx';
+import { sanitizeInput } from '../utils/security';
 
 function MedicationForm({ onAdd }) {
     const { t } = useTranslation();
@@ -99,7 +100,8 @@ function MedicationForm({ onAdd }) {
                             id="name"
                             value={name}
                             onChange={(e) => {
-                                setName(e.target.value);
+                                const sanitized = sanitizeInput(e.target.value);
+                                setName(sanitized);
                                 if (errors.name) setErrors({ ...errors, name: null });
                             }}
                             placeholder={t('placeholder_medication_name')}
@@ -125,7 +127,10 @@ function MedicationForm({ onAdd }) {
                         type="text"
                         id="dosage"
                         value={dosage}
-                        onChange={(e) => setDosage(e.target.value)}
+                        onChange={(e) => {
+                            const sanitized = sanitizeInput(e.target.value);
+                            setDosage(sanitized);
+                        }}
                         placeholder={t('placeholder_dosage')}
                         className="input-field"
                     />

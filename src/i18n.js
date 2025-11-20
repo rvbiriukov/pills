@@ -170,6 +170,7 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
+        lng: 'en', // Force default language to English
         fallbackLng: 'en',
         interpolation: {
             escapeValue: false
