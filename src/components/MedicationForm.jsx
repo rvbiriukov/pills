@@ -17,9 +17,27 @@ function MedicationForm({ onAdd }) {
     const [errors, setErrors] = useState({});
 
     const TIME_PRESETS = [
-        { label: t('morning'), value: '09:00', icon: Sunrise },
-        { label: t('afternoon'), value: '14:00', icon: Sun },
-        { label: t('evening'), value: '21:00', icon: Moon },
+        {
+            label: t('morning'),
+            value: '09:00',
+            icon: Sunrise,
+            activeClass: "bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border-orange-200 dark:border-orange-700/50 text-orange-700 dark:text-orange-300 ring-1 ring-orange-200 dark:ring-orange-700/50",
+            iconClass: "text-orange-400 dark:text-orange-500 group-hover:text-orange-600 dark:group-hover:text-orange-400"
+        },
+        {
+            label: t('afternoon'),
+            value: '14:00',
+            icon: Sun,
+            activeClass: "bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700/50",
+            iconClass: "text-blue-400 dark:text-blue-500 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+        },
+        {
+            label: t('evening'),
+            value: '21:00',
+            icon: Moon,
+            activeClass: "bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 border-purple-200 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-200 dark:ring-purple-700/50",
+            iconClass: "text-purple-400 dark:text-purple-500 group-hover:text-purple-600 dark:group-hover:text-purple-400"
+        },
     ];
 
     const validate = () => {
@@ -73,7 +91,7 @@ function MedicationForm({ onAdd }) {
                 <div>
                     <label htmlFor="name" className="label-text">{t('medication_name')}</label>
                     <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors">
                             <Pill className={clsx("w-5 h-5", errors.name && "text-red-400")} />
                         </div>
                         <input
@@ -84,15 +102,15 @@ function MedicationForm({ onAdd }) {
                                 setName(e.target.value);
                                 if (errors.name) setErrors({ ...errors, name: null });
                             }}
-                            placeholder="e.g. Vitamin D"
+                            placeholder={t('placeholder_medication_name')}
                             className={clsx(
                                 "input-field pl-12",
-                                errors.name && "bg-red-50 border-red-200 focus:border-red-500 focus:ring-red-200"
+                                errors.name && "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400"
                             )}
                         />
                     </div>
                     {errors.name && (
-                        <p className="text-red-500 text-xs mt-1.5 font-medium flex items-center gap-1.5 animate-in slide-in-from-top-1">
+                        <p className="text-red-500 dark:text-red-400 text-xs mt-1.5 font-medium flex items-center gap-1.5 animate-in slide-in-from-top-1">
                             <AlertCircle className="w-3.5 h-3.5" />
                             {errors.name}
                         </p>
@@ -101,14 +119,14 @@ function MedicationForm({ onAdd }) {
 
                 <div>
                     <label htmlFor="dosage" className="label-text">
-                        {t('dosage')} <span className="text-slate-400 font-normal ml-1 text-xs uppercase tracking-wider">({t('optional')})</span>
+                        {t('dosage')} <span className="text-slate-400 dark:text-slate-500 font-normal ml-1 text-xs uppercase tracking-wider">({t('optional')})</span>
                     </label>
                     <input
                         type="text"
                         id="dosage"
                         value={dosage}
                         onChange={(e) => setDosage(e.target.value)}
-                        placeholder="e.g. 1000 IU"
+                        placeholder={t('placeholder_dosage')}
                         className="input-field"
                     />
                 </div>
@@ -128,13 +146,23 @@ function MedicationForm({ onAdd }) {
                             className={clsx(
                                 "flex flex-col items-center justify-center p-3.5 rounded-2xl border transition-all duration-200 relative overflow-hidden group",
                                 !isCustomTime && time === preset.value
-                                    ? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
-                                    : "bg-slate-50 border-transparent text-slate-600 hover:bg-white hover:border-slate-200 hover:shadow-sm"
+                                    ? preset.activeClass
+                                    : "bg-slate-50 dark:bg-slate-800/50 border-transparent text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm"
                             )}
                         >
-                            <preset.icon className="w-7 h-7 mb-1.5 text-indigo-400 group-hover:text-indigo-600 transition-colors" />
+                            <preset.icon className={clsx(
+                                "w-7 h-7 mb-1.5 transition-colors",
+                                !isCustomTime && time === preset.value
+                                    ? "text-current"
+                                    : preset.iconClass
+                            )} />
                             <span className="text-sm font-semibold">{preset.label}</span>
-                            <span className="text-[10px] font-medium text-slate-400 mt-0.5 bg-white/50 px-2 py-0.5 rounded-full">{preset.value}</span>
+                            <span className={clsx(
+                                "text-[10px] font-medium mt-0.5 px-2 py-0.5 rounded-full transition-colors",
+                                !isCustomTime && time === preset.value
+                                    ? "bg-white/50 dark:bg-black/20 text-current"
+                                    : "text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-800/50"
+                            )}>{preset.value}</span>
                         </button>
                     ))}
                     <button
@@ -143,11 +171,11 @@ function MedicationForm({ onAdd }) {
                         className={clsx(
                             "flex flex-col items-center justify-center p-3.5 rounded-2xl border transition-all duration-200 group relative",
                             isCustomTime
-                                ? "bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
-                                : "bg-slate-50 border-transparent text-slate-600 hover:bg-white hover:border-slate-200 hover:shadow-sm"
+                                ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-700"
+                                : "bg-slate-50 dark:bg-slate-800/50 border-transparent text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm"
                         )}
                     >
-                        <Clock className={clsx("w-7 h-7 mb-1.5 transition-colors", isCustomTime ? "text-indigo-500" : "text-slate-400 group-hover:text-slate-500")} />
+                        <Clock className={clsx("w-7 h-7 mb-1.5 transition-colors", isCustomTime ? "text-indigo-500 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400")} />
                         <span className="text-sm font-semibold">{t('custom')}</span>
                         {isCustomTime && (
                             <div className="absolute top-2 right-2">
@@ -171,15 +199,15 @@ function MedicationForm({ onAdd }) {
 
             <div>
                 <label className="label-text">{t('frequency')}</label>
-                <div className="flex p-1.5 bg-slate-100 rounded-2xl mb-4">
+                <div className="flex p-1.5 bg-slate-100 dark:bg-slate-700 rounded-2xl mb-4">
                     <button
                         type="button"
                         onClick={() => setFrequency('daily')}
                         className={clsx(
                             "flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200",
                             frequency === 'daily'
-                                ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5"
-                                : "text-slate-500 hover:text-slate-700"
+                                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                         )}
                     >
                         {t('daily')}
@@ -190,8 +218,8 @@ function MedicationForm({ onAdd }) {
                         className={clsx(
                             "flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200",
                             frequency === 'specific_dates'
-                                ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5"
-                                : "text-slate-500 hover:text-slate-700"
+                                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                         )}
                     >
                         {t('specific_dates')}
@@ -200,8 +228,8 @@ function MedicationForm({ onAdd }) {
 
                 {frequency === 'specific_dates' && (
                     <div className={clsx(
-                        "border rounded-3xl p-6 bg-white flex justify-center animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm",
-                        errors.dates ? "border-red-200 ring-1 ring-red-100" : "border-slate-100"
+                        "border rounded-3xl p-6 bg-white dark:bg-slate-800 flex justify-center animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm",
+                        errors.dates ? "border-red-200 dark:border-red-800 ring-1 ring-red-100 dark:ring-red-900" : "border-slate-100 dark:border-slate-700"
                     )}>
                         <div className="w-full flex flex-col items-center">
                             <DayPicker
@@ -213,7 +241,7 @@ function MedicationForm({ onAdd }) {
                                 }}
                             />
                             {errors.dates && (
-                                <p className="text-red-500 text-xs mt-3 font-medium flex items-center gap-1.5">
+                                <p className="text-red-500 dark:text-red-400 text-xs mt-3 font-medium flex items-center gap-1.5">
                                     <AlertCircle className="w-3.5 h-3.5" />
                                     {errors.dates}
                                 </p>

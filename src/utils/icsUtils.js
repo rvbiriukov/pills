@@ -123,6 +123,13 @@ const detectPlatform = () => {
 };
 
 /**
+ * Detects if user is on mobile device
+ */
+const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+/**
  * Formats date for calendar URLs (YYYYMMDDTHHMMSS)
  */
 const formatDateForCalendar = (date) => {
@@ -131,10 +138,10 @@ const formatDateForCalendar = (date) => {
 };
 
 /**
- * Creates calendar URL based on platform
+ * Creates calendar URL for daily medications
  */
 const createCalendarUrl = (medication, platform) => {
-    const { name, dosage, time, frequency } = medication;
+    const { name, dosage, time } = medication;
     const [hours, minutes] = time.split(':').map(Number);
 
     const title = dosage ? `💊 ${name} (${dosage})` : `💊 ${name}`;
@@ -149,38 +156,6 @@ const createCalendarUrl = (medication, platform) => {
     const startStr = formatDateForCalendar(startDate);
     const endStr = formatDateForCalendar(endDate);
 
-    if (platform === 'ios') {
-        // iOS Calendar URL scheme (works in Safari on iOS)
-        // Note: This opens in the default calendar app
-        const params = new URLSearchParams({
-            action: 'TEMPLATE',
-            text: title,
-            details: description,
-            dates: `${startStr}/${endStr}`,
-        });
-
-        const recur = frequency === 'daily' ? '&recur=RRULE:FREQ=DAILY' : '';
-        return `https://calendar.google.com/calendar/render?${params.toString()}${recur}`;
-    }
-
-    if (platform === 'android') {
-        // Android Calendar Intent (opens in default calendar)
-        const startMs = startDate.getTime();
-        const endMs = endDate.getTime();
-
-        // Google Calendar URL works universally on Android
-        const params = new URLSearchParams({
-            action: 'TEMPLATE',
-            text: title,
-            details: description,
-            dates: `${startStr}/${endStr}`,
-        });
-
-        const recur = frequency === 'daily' ? '&recur=RRULE:FREQ=DAILY' : '';
-        return `https://calendar.google.com/calendar/render?${params.toString()}${recur}`;
-    }
-
-    // Web (desktop) - Google Calendar
     const params = new URLSearchParams({
         action: 'TEMPLATE',
         text: title,
@@ -188,35 +163,74 @@ const createCalendarUrl = (medication, platform) => {
         dates: `${startStr}/${endStr}`,
     });
 
-    const recur = frequency === 'daily' ? '&recur=RRULE:FREQ=DAILY' : '';
+    // Daily recurrence
+    const recur = '&recur=RRULE:FREQ=DAILY';
     return `https://calendar.google.com/calendar/render?${params.toString()}${recur}`;
 };
 
 /**
- * Main export function - opens calendar for medications
+ * Downloads ICS file for complex cases (specific dates)
  */
-export const downloadICS = (content, filename = 'pillbox_schedule.ics') => {
-    // This is kept for backward compatibility but not used anymore
-    console.warn('downloadICS with content is deprecated, use addToCalendar instead');
+const downloadICSFile = (content, filename) => {
+    const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+
+    if (isMobileDevice()) {
+        // For mobile: use data URI which triggers native calendar apps
+        const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(content);
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        // For desktop: use blob URL
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }
 };
 
 /**
- * Adds medications to calendar using platform-specific URLs
+ * Main export function - kept for backward compatibility
  */
-export const addToCalendar = (medications) => {
+export const downloadICS = (content, filename = 'pillbox_schedule.ics') => {
+    downloadICSFile(content, filename);
+};
+
+/**
+ * Adds medications to calendar using hybrid approach
+ */
+export const addToCalendar = (medications, t) => {
     if (!medications || medications.length === 0) {
         return;
     }
 
-    const platform = detectPlatform();
+    // Use URL only for single daily medication (simple and fast)
+    // For everything else, use ICS file (better UX for multiple items)
+    const isSingleDaily = medications.length === 1 && medications[0].frequency === 'daily';
 
-    // Open calendar URLs for each medication
-    medications.forEach((med, index) => {
-        const url = createCalendarUrl(med, platform);
+    if (isSingleDaily) {
+        // Single daily medication - use URL approach
+        const platform = detectPlatform();
+        const url = createCalendarUrl(medications[0], platform);
+        window.open(url, '_blank');
+    } else {
+        // Multiple medications or specific dates - use ICS file
+        // Show disclaimer first
+        if (t) {
+            alert(t('ics_file_disclaimer'));
+        }
 
-        // Small delay to avoid popup blocking
-        setTimeout(() => {
-            window.open(url, '_blank');
-        }, index * 300);
-    });
+        // Generate and download ICS file
+        const icsContent = generateICS(medications);
+        downloadICSFile(icsContent, 'medication_schedule.ics');
+    }
 };

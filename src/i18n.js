@@ -29,6 +29,9 @@ const resources = {
             "delete_label": "Delete medication",
             "export_alert": "Please add at least one medication to export.",
             "error_required_name": "Please enter the medication name.",
+            "ics_file_disclaimer": "An ICS file will be downloaded with your medication schedule. Please import it into your calendar app.",
+            "placeholder_medication_name": "e.g. Vitamin D",
+            "placeholder_dosage": "e.g. 1000 IU",
             "footer_made_with": "Vibe-coded with ❤️ for those over 30 by"
         }
     },
@@ -58,6 +61,9 @@ const resources = {
             "delete_label": "Medikament löschen",
             "export_alert": "Bitte fügen Sie mindestens ein Medikament hinzu, um zu exportieren.",
             "error_required_name": "Bitte geben Sie den Medikamentennamen ein.",
+            "ics_file_disclaimer": "Eine ICS-Datei mit Ihrem Medikamentenplan wird heruntergeladen. Bitte importieren Sie sie in Ihre Kalender-App.",
+            "placeholder_medication_name": "z.B. Vitamin D",
+            "placeholder_dosage": "z.B. 1000 IE",
             "footer_made_with": "Vibe-coded mit ❤️ für alle über 30 von"
         }
     },
@@ -87,6 +93,9 @@ const resources = {
             "delete_label": "Eliminar medicamento",
             "export_alert": "Por favor añade al menos un medicamento para exportar.",
             "error_required_name": "Por favor introduce el nombre del medicamento.",
+            "ics_file_disclaimer": "Se descargará un archivo ICS con tu horario de medicación. Por favor, impórtalo en tu aplicación de calendario.",
+            "placeholder_medication_name": "ej. Vitamina D",
+            "placeholder_dosage": "ej. 1000 UI",
             "footer_made_with": "Vibe-coded con ❤️ para mayores de 30 por"
         }
     },
@@ -116,6 +125,9 @@ const resources = {
             "delete_label": "Excluir medicamento",
             "export_alert": "Por favor adicione pelo menos um medicamento para exportar.",
             "error_required_name": "Por favor insira o nome do medicamento.",
+            "ics_file_disclaimer": "Um arquivo ICS será baixado com seu horário de medicação. Por favor, importe-o em seu aplicativo de calendário.",
+            "placeholder_medication_name": "ex. Vitamina D",
+            "placeholder_dosage": "ex. 1000 UI",
             "footer_made_with": "Vibe-coded com ❤️ para quem tem mais de 30 por"
         }
     },
@@ -145,6 +157,9 @@ const resources = {
             "delete_label": "Удалить лекарство",
             "export_alert": "Пожалуйста, добавьте хотя бы одно лекарство для экспорта.",
             "error_required_name": "Пожалуйста, введите название лекарства.",
+            "ics_file_disclaimer": "Будет загружен ICS-файл с вашим графиком приёма лекарств. Пожалуйста, импортируйте его в ваше приложение календаря.",
+            "placeholder_medication_name": "напр. Витамин D",
+            "placeholder_dosage": "напр. 1000 МЕ",
             "footer_made_with": "Вайб-кодил с ❤️ для тех, кому за 30 —"
         }
     }
